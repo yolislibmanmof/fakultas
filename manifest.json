@@ -1,0 +1,7 @@
+{
+  "version": "1.1.0",
+  "released": "2026-08-29",
+  "notes": ["Perbaikan UI fasilitas", "Fitur baru X"],
+  "package_url": "https://github.com/yolislibmanmof/updates/v1.1.0.zip",
+  "sha256": "HASH_SHA256_ZIP"
+}
