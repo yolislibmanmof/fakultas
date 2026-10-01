@@ -151,9 +151,9 @@ $degrees = $degrees ?? ['D3','D4','S1','S2','S3','Profesi','Spesialis'];
                                 <i class="fas fa-copy text-xs"></i>
                             </a>
                             <a href="<?= base_url('admin/programs/edit/' . $p->id) ?>" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-navy hover:text-ivory hover:border-navy transition" title="Edit"><i class="fas fa-pen text-xs"></i></a>
-                            <?= form_open('admin/programs/delete/' . $p->id, ['class' => 'inline', 'onsubmit' => "return confirm('Yakin hapus prodi ini?')"]) ?>
-                                <button type="submit" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-red-600 hover:text-ivory hover:border-red-600 transition" title="Hapus"><i class="fas fa-trash text-xs"></i></button>
-                            <?= form_close() ?>
+                            <button type="button" onclick="hapusProdi(<?= $p->id ?>)" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-red-600 hover:text-ivory hover:border-red-600 transition" title="Hapus">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -325,5 +325,23 @@ $degrees = $degrees ?? ['D3','D4','S1','S2','S3','Profesi','Spesialis'];
     
     window.closeExpiry = function(){ document.getElementById('expiryModal').classList.add('hidden'); };
     document.getElementById('expiryModal').addEventListener('click', function(e){ if (e.target === this) closeExpiry(); });
+
+    // ===== 🗑️ HAPUS PRODI (anti nested-form + CSRF aman) =====
+    window.hapusProdi = function(id){
+        if (!confirm('Yakin hapus prodi ini? Tindakan tidak dapat dibatalkan.')) return;
+        var f = document.createElement('form');
+        f.method = 'post';
+        f.action = '<?= base_url('admin/programs/delete'); ?>/' + id;
+        f.style.display = 'none';
+        var csrfName = '<?= $this->security->get_csrf_token_name() ?>';
+        var csrfHash = '<?= $this->security->get_csrf_hash() ?>';
+        if (csrfName && csrfHash) {
+            var ci = document.createElement('input');
+            ci.type = 'hidden'; ci.name = csrfName; ci.value = csrfHash;
+            f.appendChild(ci);
+        }
+        document.body.appendChild(f);
+        f.submit();
+    };
 })();
 </script>

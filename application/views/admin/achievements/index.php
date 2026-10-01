@@ -35,7 +35,7 @@
 </div>
 
 <!-- Table -->
-<form id="bulkForm" action="<?= base_url('admin/achievements/bulk_delete') ?>" method="POST" onsubmit="return confirm('Yakin hapus prestasi terpilih?')">
+<div id="bulkForm" class="bulk-wrapper">
 <div class="bg-white border border-gray-200 overflow-hidden">
     <div class="px-6 py-4 bg-ivory-warm/50 border-b border-gray-200 flex flex-wrap justify-between items-center gap-3">
         <div class="flex items-center gap-4">
@@ -46,9 +46,9 @@
         <!-- 🔥 FITUR GILA: Bulk actions -->
         <div id="bulkActions" class="flex items-center gap-2 opacity-50 pointer-events-none transition-all">
             <span class="text-xs text-slate"><span id="selectedCount">0</span> dipilih</span>
-            <button type="submit" class="text-xs uppercase tracking-editorial font-semibold px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition">
-                <i class="fas fa-trash mr-1"></i>Hapus
-            </button>
+<button type="button" onclick="bulkHapusPrestasi()" class="text-xs uppercase tracking-editorial font-semibold px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition">
+    <i class="fas fa-trash mr-1"></i>Hapus
+</button>
             <button type="button" onclick="clearSelection()" class="text-xs uppercase tracking-editorial font-semibold px-3 py-1.5 bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 transition">
                 Batal
             </button>
@@ -122,26 +122,26 @@
                             </a>
                         <?php else: ?><span class="text-xs text-slate">-</span><?php endif; ?>
                     </td>
-                    <td class="text-center">
-                        <div class="flex items-center justify-center gap-1">
-                            <!-- 🔥 FITUR GILA: Preview button -->
-                            <button type="button" onclick="previewAchievement(<?= $r->id ?>)" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-navy hover:text-ivory hover:border-navy transition" title="Preview">
-                                <i class="fas fa-eye text-xs"></i>
-                            </button>
-                            <!-- 🔥 FITUR GILA: Duplicate button -->
-                            <a href="<?= base_url('admin/achievements/duplicate/' . $r->id) ?>" onclick="return confirm('Duplikat prestasi ini?')" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-blue-600 hover:text-ivory hover:border-blue-600 transition" title="Duplikat">
-                                <i class="fas fa-copy text-xs"></i>
-                            </a>
-                            <a href="<?= base_url('admin/achievements/edit/' . $r->id) ?>" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-navy hover:text-ivory hover:border-navy transition" title="Edit">
-                                <i class="fas fa-pen text-xs"></i>
-                            </a>
-                            <?= form_open('admin/achievements/delete/' . $r->id, ['class' => 'inline', 'onsubmit' => "return confirm('Yakin hapus prestasi ini?')"]) ?>
-                                <button type="submit" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-red-600 hover:text-ivory hover:border-red-600 transition" title="Hapus">
-                                    <i class="fas fa-trash text-xs"></i>
-                                </button>
-                            <?= form_close() ?>
-                        </div>
-                    </td>
+<td class="text-center">
+    <div class="flex items-center justify-center gap-1">
+        <!-- Preview button -->
+        <button type="button" onclick="previewAchievement(<?= $r->id ?>)" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-navy hover:text-ivory hover:border-navy transition" title="Preview">
+            <i class="fas fa-eye text-xs"></i>
+        </button>
+        <!-- Duplicate button -->
+        <a href="<?= base_url('admin/achievements/duplicate/' . $r->id) ?>" onclick="return confirm('Duplikat prestasi ini?')" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-blue-600 hover:text-ivory hover:border-blue-600 transition" title="Duplikat">
+            <i class="fas fa-copy text-xs"></i>
+        </a>
+        <!-- Edit -->
+        <a href="<?= base_url('admin/achievements/edit/' . $r->id) ?>" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-navy hover:text-ivory hover:border-navy transition" title="Edit">
+            <i class="fas fa-pen text-xs"></i>
+        </a>
+        <!-- ✅ HAPUS: pakai button + JS submit (anti form-nesting) -->
+        <button type="button" onclick="hapusPrestasi(<?= $r->id ?>)" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-red-600 hover:text-ivory hover:border-red-600 transition" title="Hapus">
+            <i class="fas fa-trash text-xs"></i>
+        </button>
+    </div>
+</td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -149,7 +149,7 @@
     </div>
     <?php endif; ?>
 </div>
-</form>
+</div>
 
 <!-- 🔥 FITUR GILA: Preview Modal -->
 <div id="previewModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
@@ -311,4 +311,67 @@ document.getElementById('previewModal').addEventListener('click', function(e) {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closePreview();
 });
+
+// ===== 🔥 FUNGSI HAPUS PRESTASI (ANTI-FORM-NESTING) =====
+function hapusPrestasi(id){
+    if (!confirm('Yakin hapus prestasi ini? Tindakan tidak dapat dibatalkan.')) return;
+    
+    // Buat form programmatik (melewati handler admin.js yang crash)
+    var f = document.createElement('form');
+    f.method = 'post';
+    f.action = '<?= base_url('admin/achievements/delete'); ?>/' + id;
+    f.style.display = 'none';
+    
+    // Tambah CSRF token kalau ada
+    var csrfName = '<?= $this->security->get_csrf_token_name() ?>';
+    var csrfHash = '<?= $this->security->get_csrf_hash() ?>';
+    if (csrfName && csrfHash) {
+        var csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = csrfName;
+        csrf.value = csrfHash;
+        f.appendChild(csrf);
+    }
+    
+    document.body.appendChild(f);
+    f.submit();
+}
+
+// ===== BULK DELETE yang juga aman =====
+function bulkHapusPrestasi(){
+    var checked = document.querySelectorAll('.row-checkbox:checked');
+    if (!checked.length) {
+        alert('Pilih data terlebih dahulu.');
+        return;
+    }
+    if (!confirm('Hapus ' + checked.length + ' prestasi terpilih? Tindakan tidak dapat dibatalkan.')) return;
+    
+    var f = document.createElement('form');
+    f.method = 'post';
+    f.action = '<?= base_url('admin/achievements/bulk_delete'); ?>';
+    f.style.display = 'none';
+    
+    // Tambah CSRF
+    var csrfName = '<?= $this->security->get_csrf_token_name() ?>';
+    var csrfHash = '<?= $this->security->get_csrf_hash() ?>';
+    if (csrfName && csrfHash) {
+        var csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = csrfName;
+        csrf.value = csrfHash;
+        f.appendChild(csrf);
+    }
+    
+    // Tambah ID terpilih
+    checked.forEach(function(cb){
+        var inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = 'ids[]';
+        inp.value = cb.value;
+        f.appendChild(inp);
+    });
+    
+    document.body.appendChild(f);
+    f.submit();
+}
 </script>

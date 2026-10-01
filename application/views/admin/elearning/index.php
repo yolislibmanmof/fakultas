@@ -73,9 +73,9 @@
                                 <i class="fas fa-copy text-xs"></i>
                             </a>
                             <a href="<?= base_url('admin/elearning/edit/' . $r->id) ?>" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-navy hover:text-ivory hover:border-navy transition" title="Edit"><i class="fas fa-pen text-xs"></i></a>
-                            <?= form_open('admin/elearning/delete/' . $r->id, ['class' => 'inline', 'onsubmit' => "return confirm('Yakin hapus platform ini?')"]) ?>
-                                <button type="submit" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-red-600 hover:text-ivory hover:border-red-600 transition" title="Hapus"><i class="fas fa-trash text-xs"></i></button>
-                            <?= form_close() ?>
+                            <button type="button" onclick="if(confirm('Yakin hapus platform ini?')){ fetch('<?= base_url('admin/elearning/delete/' . $r->id) ?>', {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}}).then(function(){ location.reload(); }).catch(function(){ alert('Gagal hapus'); }); }" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-red-600 hover:text-ivory hover:border-red-600 transition" title="Hapus">
+                            <i class="fas fa-trash text-xs"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>

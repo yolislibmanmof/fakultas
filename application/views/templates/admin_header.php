@@ -272,6 +272,9 @@ $total_notif = array_sum($notif_counts);
         .admin-toast.show { transform: translateX(0); }
         .admin-toast i { color: #C9A227; margin-right: 8px; }
     </style>
+<!-- 🛡️ Token CSRF global (dibaca JavaScript untuk semua POST dinamis) -->
+<meta name="csrf-name" content="<?= $this->security->get_csrf_token_name() ?>">
+<meta name="csrf-hash" content="<?= $this->security->get_csrf_hash() ?>">
 </head>
 <body>
 

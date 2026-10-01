@@ -132,11 +132,9 @@
                             <a href="<?= base_url('admin/lecturerblog/edit/' . $p->id) ?>" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-navy hover:text-ivory hover:border-navy transition" title="Edit">
                                 <i class="fas fa-pen text-xs"></i>
                             </a>
-                            <?= form_open('admin/lecturerblog/delete/' . $p->id, ['class' => 'inline', 'onsubmit' => "return confirm('Yakin hapus artikel ini?')"]) ?>
-                                <button type="submit" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-red-600 hover:text-ivory hover:border-red-600 transition" title="Hapus">
-                                    <i class="fas fa-trash text-xs"></i>
-                                </button>
-                            <?= form_close() ?>
+                            <button type="button" onclick="hapusArtikel(<?= $p->id ?>)" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-red-600 hover:text-ivory hover:border-red-600 transition" title="Hapus">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -251,5 +249,24 @@
     document.addEventListener('keydown', function(e){
         if (e.key === 'Escape') closePreview();
     });
+
+    // ===== ️ HAPUS ARTIKEL (anti nested-form + CSRF aman) =====
+    window.hapusArtikel = function(id){
+        if (!confirm('Yakin hapus artikel ini? Tindakan tidak dapat dibatalkan.')) return;
+        var f = document.createElement('form');
+        f.method = 'post';
+        f.action = '<?= base_url('admin/lecturerblog/delete'); ?>/' + id;
+        f.style.display = 'none';
+        // Sertakan CSRF token bila aktif
+        var csrfName = '<?= $this->security->get_csrf_token_name() ?>';
+        var csrfHash = '<?= $this->security->get_csrf_hash() ?>';
+        if (csrfName && csrfHash) {
+            var ci = document.createElement('input');
+            ci.type = 'hidden'; ci.name = csrfName; ci.value = csrfHash;
+            f.appendChild(ci);
+        }
+        document.body.appendChild(f);
+        f.submit();   // submit programmatik: melewati handler admin.js yang crash
+    };
 })();
 </script>

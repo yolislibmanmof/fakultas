@@ -6,7 +6,7 @@
 <?php
 $CI =& get_instance();
 $CI->load->model('Setting_model');
-$footer_name = $CI->Setting_model->get('site_name', 'Fakultas Ilmu Komputer');
+$footer_name = $CI->Setting_model->get('site_name', 'Fakultas Sains & Bisnis');
 ?>
 
 <!-- 🔥 COMMAND PALETTE -->
@@ -129,6 +129,9 @@ $footer_name = $CI->Setting_model->get('site_name', 'Fakultas Ilmu Komputer');
         </div>
     </div>
 </footer>
+
+<!-- 🛡️ Token CSRF global: tersedia untuk semua form & AJAX admin -->
+<input type="hidden" id="globalCsrf" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
 
 <script src="<?= base_url('assets/js/admin.js') ?>"></script>
 
@@ -472,8 +475,45 @@ $footer_name = $CI->Setting_model->get('site_name', 'Fakultas Ilmu Komputer');
         .catch(function(){ showToast('Network error'); });
     };
 
+    // ===== 🌐 UNIVERSAL DELETE HANDLER v2 (token dari meta/hidden/cookie) =====
+    (function(){
+        function readMeta(n){ var m = document.querySelector('meta[name="' + n + '"]'); return m ? m.getAttribute('content') : null; }
+        function readCookie(n){ var m = document.cookie.match('(^|;)\\s*' + n + '\\s*=\\s*([^;]+)'); return m ? decodeURIComponent(m[2]) : null; }
+
+        var csrfName = readMeta('csrf-name') || '<?= $this->security->get_csrf_token_name() ?>';
+        var csrfHash = readMeta('csrf-hash')
+                    || (document.getElementById('globalCsrf') ? document.getElementById('globalCsrf').value : null)
+                    || readCookie('<?= $this->security->get_csrf_cookie_name() ?>');
+
+        // 💉 Suntik token ke SEMUA form POST (bulk delete dll)
+        if (csrfName && csrfHash) {
+            document.querySelectorAll('form').forEach(function(fm){
+                if ((fm.getAttribute('method') || '').toLowerCase() !== 'post') return;
+                if (!fm.querySelector('input[name="' + csrfName + '"]')) {
+                    var hi = document.createElement('input');
+                    hi.type = 'hidden'; hi.name = csrfName; hi.value = csrfHash;
+                    fm.appendChild(hi);
+                }
+            });
+        }
+
+        window.hapusRow = function(controller, id, pesan){
+            pesan = pesan || 'Yakin hapus data ini? Tindakan tidak dapat dibatalkan.';
+            if (!confirm(pesan)) return;
+            var f = document.createElement('form');
+            f.method = 'post';
+            f.action = '<?= base_url() ?>admin/' + controller + '/delete/' + id;
+            f.style.display = 'none';
+            if (csrfName && csrfHash) {
+                var ci = document.createElement('input');
+                ci.type = 'hidden'; ci.name = csrfName; ci.value = csrfHash;
+                f.appendChild(ci);
+            }
+            document.body.appendChild(f);
+            f.submit();
+        };
+    })();
 })();
 </script>
-
 </body>
 </html>

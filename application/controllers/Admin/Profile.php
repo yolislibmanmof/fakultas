@@ -142,11 +142,15 @@ class Profile extends CI_Controller {
             }
         }
 
-        $this->Auth_model->log_activity(
-            $this->session->userdata('user_id'),
-            'update_profile',
-            'Update profil fakultas'
-        );
+        // Log aktivitas (aman — tidak crash walau Auth_model belum dimuat)
+        if (file_exists(APPPATH . 'models/Auth_model.php')) {
+            $this->load->model('Auth_model');
+            $this->Auth_model->log_activity(
+                $this->session->userdata('user_id'),
+                'update_profile',
+                'Update profil fakultas'
+            );
+        }
 
         $this->session->set_flashdata('success', 'Profil fakultas berhasil diperbarui!');
         redirect('admin/profile');

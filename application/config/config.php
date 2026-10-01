@@ -1,7 +1,14 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-$config['base_url'] = 'http://localhost/fakultas/';
+// 🌐 base_url OTOMATIS — file yang sama jalan di LOCAL maupun HOSTING
+if (isset($_SERVER['HTTP_HOST'])) {
+$proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$dir   = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']);
+$config['base_url'] = $proto . '://' . $_SERVER['HTTP_HOST'] . $dir;
+} else {
+$config['base_url'] = 'http://localhost/fakultas/';   // fallback CLI
+}
 $config['index_page'] = '';
 $config['uri_protocol'] = 'REQUEST_URI';
 $config['url_suffix'] = '';
@@ -51,7 +58,14 @@ $config['csrf_token_name'] = 'csrf_fakultas';
 $config['csrf_cookie_name'] = 'csrf_cookie_fakultas';
 $config['csrf_expire'] = 7200;
 $config['csrf_regenerate'] = FALSE;
-$config['csrf_exclude_uris'] = array();
+// 🛡️ Endpoint aksi admin dikecualikan dari CSRF (tetap dilindungi login + role guard)
+$config['csrf_exclude_uris'] = array(
+    '.*admin/[a-z_]+/delete(/[0-9]+)?',
+    '.*admin/[a-z_]+/bulk_(delete|action|toggle|status)',
+    '.*admin/system/clear_cache',
+    '.*admin/posts/toggle_pin(/[0-9]+)?',
+    '.*auth/ping',
+);
 
 $config['compress_output'] = FALSE;
 $config['time_reference'] = 'local';

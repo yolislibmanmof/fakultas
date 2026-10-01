@@ -130,9 +130,9 @@
                             <a href="<?= base_url('berita/detail/' . $p->slug) ?>" target="_blank" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-gold hover:text-navy hover:border-gold transition" title="Lihat di website"><i class="fas fa-external-link-alt text-xs"></i></a>
                             <?php endif; ?>
                             <a href="<?= base_url('admin/posts/edit/' . $p->id) ?>" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-navy hover:text-ivory hover:border-navy transition" title="Edit"><i class="fas fa-pen text-xs"></i></a>
-                            <?= form_open('admin/posts/delete/' . $p->id, ['class' => 'inline', 'onsubmit' => "return confirm('Yakin hapus berita ini?')"]) ?>
-                                <button type="submit" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-red-600 hover:text-ivory hover:border-red-600 transition" title="Hapus"><i class="fas fa-trash text-xs"></i></button>
-                            <?= form_close() ?>
+                            <button type="button" onclick="hapusBerita(<?= $p->id ?>)" class="w-8 h-8 border border-gray-200 flex items-center justify-center text-slate hover:bg-red-600 hover:text-ivory hover:border-red-600 transition" title="Hapus">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -249,5 +249,24 @@
             this.querySelector('i').className = 'fas fa-sort-' + (asc ? 'down' : 'up') + ' text-xs ml-1';
         });
     });
+
+    // ===== 🗑️ HAPUS BERITA (anti nested-form + CSRF aman) =====
+    window.hapusBerita = function(id){
+        if (!confirm('Yakin hapus berita ini? Tindakan tidak dapat dibatalkan.')) return;
+        var f = document.createElement('form');
+        f.method = 'post';
+        f.action = '<?= base_url('admin/posts/delete'); ?>/' + id;
+        f.style.display = 'none';
+        // Sertakan CSRF token bila aktif
+        var csrfName = '<?= $this->security->get_csrf_token_name() ?>';
+        var csrfHash = '<?= $this->security->get_csrf_hash() ?>';
+        if (csrfName && csrfHash) {
+            var ci = document.createElement('input');
+            ci.type = 'hidden'; ci.name = csrfName; ci.value = csrfHash;
+            f.appendChild(ci);
+        }
+        document.body.appendChild(f);
+        f.submit();   // submit programmatik: melewati handler admin.js yang crash
+    };
 })();
 </script>
